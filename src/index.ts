@@ -86,16 +86,18 @@ document.getElementById('app')!.innerHTML = `
 `;
 
 // Dark mode logic
-const darkModeToggle = document.getElementById('darkModeToggle');
+const darkModeToggle = document.getElementById('darkModeToggle') as HTMLInputElement;
 const body = document.body;
 
 const enableDarkMode = () => {
     body.classList.add('dark-mode');
+    if (darkModeToggle) darkModeToggle.checked = true;
     setCookie('darkMode', 'enabled', 365);
 };
 
 const disableDarkMode = () => {
     body.classList.remove('dark-mode');
+    if (darkModeToggle) darkModeToggle.checked = false;
     setCookie('darkMode', 'disabled', 365);
 };
 
@@ -111,10 +113,10 @@ if (savedDarkMode === 'enabled') {
 }
 
 // Toggle functionality
-darkModeToggle?.addEventListener('click', () => {
-    if (body.classList.contains('dark-mode')) {
-        disableDarkMode();
-    } else {
+darkModeToggle?.addEventListener('change', () => {
+    if (darkModeToggle.checked) {
         enableDarkMode();
+    } else {
+        disableDarkMode();
     }
 });
