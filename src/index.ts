@@ -35,10 +35,11 @@ class LatestUpdates extends HTMLElement {
                     padding: 16px;
                     border-radius: 8px;
                     margin-top: 20px;
-                    background-color: #f9f9f9;
+                    background-color: var(--app-bg-color);
+                    color: var(--text-color);
                 }
                 h2 {
-                    color: #333;
+                    color: var(--h1-color);
                     margin-top: 0;
                 }
                 ul {
@@ -47,35 +48,96 @@ class LatestUpdates extends HTMLElement {
                 }
                 li {
                     margin-bottom: 10px;
+                    border-bottom: 1px solid var(--text-color);
+                    padding-bottom: 10px;
+                }
+                li:last-child {
+                    border-bottom: none;
                 }
                 .update-title {
                     font-weight: bold;
-                    color: #007bff;
+                    color: #61afef; /* A distinct color for titles */
                 }
                 .update-date {
                     font-size: 0.9em;
-                    color: #666;
+                    color: var(--text-color);
+                }
+                a {
+                    color: #61afef;
+                    text-decoration: none;
+                }
+                a:hover {
+                    text-decoration: underline;
                 }
             </style>
             <h2>Latest Software Updates</h2>
-            <ul>
-                <li>
-                    <div class="update-title">MyLib v1.2.0 Released</div>
-                    <div class="update-date">October 25, 2025</div>
-                    <div>New features include improved performance and bug fixes.</div>
-                </li>
-                <li>
-                    <div class="update-title">MyFramework v0.5.0 Beta</div>
-                    <div class="update-date">October 18, 2025</div>
-                    <div>Introduced new API for easier integration.</div>
-                </li>
-                <li>
-                    <div class="update-title">MyTool v2.1.0 Patch</div>
-                    <div class="update-date">October 10, 2025</div>
-                    <div>Critical security update and minor enhancements.</div>
-                </li>
+            <ul id="commit-list">
+                <li>Loading updates...</li>
             </ul>
         `;
+        this.fetchLatestCommits();
+    }
+
+    async fetchLatestCommits() {
+        const org = 'wallach-game-studio';
+        const reposUrl = `https://api.github.com/orgs/${org}/repos`;
+        let allCommits: any[] = [];
+
+        try {
+            // Fetch all repositories for the organization
+            const reposResponse = await fetch(reposUrl);
+            const repos = await reposResponse.json();
+
+            // For each repository, fetch its commits
+            for (const repo of repos) {
+                const commitsUrl = `https://api.github.com/repos/${org}/${repo.name}/commits?per_page=10`;
+                const commitsResponse = await fetch(commitsUrl);
+                const commits = await commitsResponse.json();
+                allCommits = allCommits.concat(commits.map((commit: any) => ({
+                    repo: repo.name,
+                    message: commit.commit.message,
+                    author: commit.commit.author.name,
+                    date: commit.commit.author.date,
+                    url: commit.html_url
+                })));
+            }
+
+            // Sort all commits by date in descending order
+            allCommits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            // Take the latest 10 commits
+            const latest10Commits = allCommits.slice(0, 10);
+
+            const commitList = this.shadowRoot!.getElementById('commit-list');
+            if (commitList) {
+                commitList.innerHTML = ''; // Clear loading message
+                if (latest10Commits.length === 0) {
+                    commitList.innerHTML = '<li>No recent updates found.</li>';
+                } else {
+                    latest10Commits.forEach(commit => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <div class="update-title">
+                                <a href="${commit.url}" target="_blank" rel="noopener noreferrer">
+                                    ${commit.repo}: ${commit.message.split('\n')[0]}
+                                </a>
+                            </div>
+                            <div class="update-date">
+                                ${new Date(commit.date).toLocaleDateString()} by ${commit.author}
+                            </div>
+                        `;
+                        commitList.appendChild(li);
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error('Failed to fetch latest commits:', error);
+            const commitList = this.shadowRoot!.getElementById('commit-list');
+            if (commitList) {
+                commitList.innerHTML = '<li>Failed to load updates. Please try again later.</li>';
+            }
+        }
     }
 }
 
