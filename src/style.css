@@ -66,7 +66,7 @@ h1 {
 
 .slider:before {
     position: absolute;
-    content: "";
+    content: "☀️"; /* Sun icon */
     height: 26px;
     width: 26px;
     left: 4px;
@@ -74,6 +74,11 @@ h1 {
     background-color: white;
     -webkit-transition: .4s;
     transition: .4s;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
 }
 
 input:checked + .slider {
@@ -88,40 +93,16 @@ input:checked + .slider:before {
     -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
+    content: "🌙"; /* Moon icon */
 }
 
-/* Rounded sliders */
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
-/* Icons */
+/* Remove separate icon styles as they are now part of :before */
 .switch .icon {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 18px;
-    transition: opacity 0.4s;
+    display: none;
 }
-
 .switch .sun {
-    left: 8px;
-    opacity: 1;
+    display: none;
 }
-
 .switch .moon {
-    right: 8px;
-    opacity: 0;
-}
-
-input:checked ~ .sun {
-    opacity: 0;
-}
-
-input:checked ~ .moon {
-    opacity: 1;
+    display: none;
 }
