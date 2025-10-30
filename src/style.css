@@ -1,21 +1,54 @@
+:root {
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --h1-color: #2c3e50;
+    --app-bg-color: #ffffff;
+    --box-shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode {
+    --bg-color: #282c34;
+    --text-color: #abb2bf;
+    --h1-color: #e06c75;
+    --app-bg-color: #3a3f4b;
+    --box-shadow-color: rgba(0, 0, 0, 0.2);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #282c34; /* Dark background */
-    color: #abb2bf; /* Light text */
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
 h1 {
-    color: #e06c75; /* Accent color for headings */
+    color: var(--h1-color);
     text-align: center;
     margin-bottom: 30px;
 }
 
 #app {
-    background-color: #3a3f4b; /* Slightly lighter dark background for content area */
+    background-color: var(--app-bg-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    box-shadow: 0 4px 8px var(--box-shadow-color);
     margin-bottom: 20px;
+}
+
+#darkModeToggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 15px;
+    background-color: #61afef;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#darkModeToggle:hover {
+    background-color: #529bd8;
 }
