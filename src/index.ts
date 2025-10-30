@@ -22,7 +22,18 @@ function getCookie(name: string): string | null {
     return null;
 }
 
+interface Commit {
+    repo: string;
+    message: string;
+    author: string;
+    date: string;
+    url: string;
+    sha: string; // Add sha for unique identification
+}
+
 class LatestUpdates extends HTMLElement {
+    private previousCommits: Commit[] = [];
+
     constructor() {
         super();
         const shadowRoot = this.attachShadow({ mode: 'open' });
@@ -45,6 +56,9 @@ class LatestUpdates extends HTMLElement {
                 ul {
                     list-style: none;
                     padding: 0;
+                    max-height: 300px; /* Fixed height for scroll */
+                    overflow-y: auto; /* Enable vertical scrollbar */
+                    padding-right: 10px; /* Space for scrollbar */
                 }
                 li {
                     margin-bottom: 10px;
@@ -69,6 +83,13 @@ class LatestUpdates extends HTMLElement {
                 a:hover {
                     text-decoration: underline;
                 }
+                @keyframes newCommitHighlight {
+                    0% { background-color: yellow; }
+                    100% { background-color: transparent; }
+                }
+                .new-commit {
+                    animation: newCommitHighlight 2s ease-out;
+                }
             </style>
             <h2>Latest Software Updates</h2>
             <ul id="commit-list">
@@ -76,12 +97,13 @@ class LatestUpdates extends HTMLElement {
             </ul>
         `;
         this.fetchLatestCommits();
+        setInterval(() => this.fetchLatestCommits(), 60 * 1000); // Update every minute
     }
 
     async fetchLatestCommits() {
         const org = 'wallach-game-studio';
         const reposUrl = `https://api.github.com/orgs/${org}/repos`;
-        let allCommits: any[] = [];
+        let currentCommits: Commit[] = [];
 
         try {
             // Fetch all repositories for the organization
@@ -93,20 +115,21 @@ class LatestUpdates extends HTMLElement {
                 const commitsUrl = `https://api.github.com/repos/${org}/${repo.name}/commits?per_page=10`;
                 const commitsResponse = await fetch(commitsUrl);
                 const commits = await commitsResponse.json();
-                allCommits = allCommits.concat(commits.map((commit: any) => ({
+                currentCommits = currentCommits.concat(commits.map((commit: any) => ({
                     repo: repo.name,
                     message: commit.commit.message,
                     author: commit.commit.author.name,
                     date: commit.commit.author.date,
-                    url: commit.html_url
+                    url: commit.html_url,
+                    sha: commit.sha
                 })));
             }
 
             // Sort all commits by date in descending order
-            allCommits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            currentCommits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             // Take the latest 10 commits
-            const latest10Commits = allCommits.slice(0, 10);
+            const latest10Commits = currentCommits.slice(0, 10);
 
             const commitList = this.shadowRoot!.getElementById('commit-list');
             if (commitList) {
@@ -126,10 +149,20 @@ class LatestUpdates extends HTMLElement {
                                 ${new Date(commit.date).toLocaleDateString()} by ${commit.author}
                             </div>
                         `;
+                        // Check if this is a new commit
+                        const isNewCommit = !this.previousCommits.some(prevCommit => prevCommit.sha === commit.sha);
+                        if (isNewCommit && this.previousCommits.length > 0) {
+                            li.classList.add('new-commit');
+                            // Remove animation class after it finishes
+                            li.addEventListener('animationend', () => {
+                                li.classList.remove('new-commit');
+                            });
+                        }
                         commitList.appendChild(li);
                     });
                 }
             }
+            this.previousCommits = latest10Commits; // Update previous commits for next comparison
 
         } catch (error) {
             console.error('Failed to fetch latest commits:', error);
